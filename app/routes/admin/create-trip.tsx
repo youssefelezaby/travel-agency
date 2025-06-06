@@ -13,7 +13,6 @@ import { world_map } from "~/constants/world_map";
 import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
 import { account } from "~/appwrite/client";
 import { useNavigate } from "react-router";
-
 import fs from "node:fs";
 import path from "node:path";
 
