@@ -96,14 +96,14 @@ const FeaturedDestination = ({
 const TravelPage = ({ loaderData }: Route.ComponentProps) => {
   const allTrips = loaderData.allTrips as Trip[];
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const initialPage = parseInt(searchParams.get("page") || "1", 10);
 
   const [currentPage, setCurrentPage] = useState(initialPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    window.location.search = `?page=${page}`;
+    setSearchParams({ page: page.toString() }, { preventScrollReset: true });
   };
 
   return (

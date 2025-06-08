@@ -205,13 +205,6 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
             </div>
           </section>
         ))}
-
-        <a href={paymentLink} className="flex">
-          <ButtonComponent type="submit" className="button-class !h-12 !w-full">
-            <span className="p-16-semibold text-white">Pay and join trip</span>
-            <span className="price-pill">{estimatedPrice}</span>
-          </ButtonComponent>
-        </a>
       </section>
 
       <section className="flex flex-col gap-6">
