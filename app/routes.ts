@@ -14,7 +14,6 @@ export default [
     route("trips/:tripId", "routes/admin/trip-detail.tsx"),
   ]),
   route("sign-in", "routes/root/sign-in.tsx"),
-  route("auth/callback", "routes/auth/callback.tsx"),
   route("api/create-trip", "routes/api/create-trip.ts"),
   layout("routes/root/page-layout.tsx", [
     index("routes/root/travel-page.tsx"),
