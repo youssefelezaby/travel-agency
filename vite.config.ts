@@ -6,6 +6,16 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
   ssr: {
-    noExternal: [/@syncfusion/]
-  }
+    noExternal: [/@syncfusion/],
+  },
+  server: {
+    host: true, // Allow external connections for mobile testing
+    port: 5173,
+    cors: true,
+  },
+  preview: {
+    host: true, // Allow external connections for mobile testing in preview mode
+    port: 4173,
+    cors: true,
+  },
 });

@@ -2,6 +2,22 @@ import { ID, OAuthProvider, Query } from "appwrite";
 import { account, database, appwriteConfig } from "~/appwrite/client";
 import { redirect } from "react-router";
 
+// Helper function to detect mobile devices
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+};
+
+// Helper function to check if we're in a popup window
+const isPopupWindow = () => {
+  try {
+    return window.opener && window.opener !== window;
+  } catch {
+    return false;
+  }
+};
+
 export const getExistingUser = async (id: string) => {
   try {
     const { documents, total } = await database.listDocuments(
@@ -99,13 +115,44 @@ const getGooglePicture = async (accessToken: string) => {
 
 export const loginWithGoogle = async () => {
   try {
-    account.createOAuth2Session(
-      OAuthProvider.Google,
-      `${window.location.origin}/`,
-      `${window.location.origin}/404`
-    );
+    const successUrl = `${window.location.origin}/auth/callback`;
+    const failureUrl = `${window.location.origin}/sign-in?error=oauth_failed`;
+
+    // For mobile devices, always use redirect method
+    if (isMobileDevice()) {
+      // Store the intended redirect URL in localStorage for mobile
+      localStorage.setItem(
+        "oauth_redirect_after_login",
+        window.location.pathname
+      );
+
+      // Use redirect-based OAuth for mobile
+      await account.createOAuth2Session(
+        OAuthProvider.Google,
+        successUrl,
+        failureUrl
+      );
+    } else {
+      // For desktop, try popup first, fallback to redirect
+      try {
+        await account.createOAuth2Session(
+          OAuthProvider.Google,
+          successUrl,
+          failureUrl
+        );
+      } catch (popupError) {
+        console.warn("Popup blocked, falling back to redirect:", popupError);
+        // Fallback to redirect method
+        await account.createOAuth2Session(
+          OAuthProvider.Google,
+          successUrl,
+          failureUrl
+        );
+      }
+    }
   } catch (error) {
     console.error("Error during OAuth2 session creation:", error);
+    throw error;
   }
 };
 
@@ -135,5 +182,40 @@ export const getUser = async () => {
   } catch (error) {
     console.error("Error fetching user:", error);
     return null;
+  }
+};
+
+export const handleOAuthCallback = async () => {
+  try {
+    // Check if user is authenticated after OAuth callback
+    const user = await account.get();
+    if (user) {
+      // Check if user exists in database
+      const existingUser = await getExistingUser(user.$id);
+
+      if (!existingUser) {
+        // Store user data if they're new
+        await storeUserData();
+      }
+
+      // Get redirect URL from localStorage (for mobile) or default to home
+      const redirectTo =
+        localStorage.getItem("oauth_redirect_after_login") || "/";
+      localStorage.removeItem("oauth_redirect_after_login");
+
+      // Close popup if this is a popup window
+      if (isPopupWindow()) {
+        window.close();
+        return;
+      }
+
+      // Redirect to intended page
+      return redirect(redirectTo);
+    } else {
+      return redirect("/sign-in?error=oauth_failed");
+    }
+  } catch (error) {
+    console.error("Error handling OAuth callback:", error);
+    return redirect("/sign-in?error=oauth_failed");
   }
 };
