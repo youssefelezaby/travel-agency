@@ -1,18 +1,27 @@
-import { Header } from "../../../components";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
 import { ComboBoxComponent } from "@syncfusion/ej2-react-dropdowns";
-import type { Route } from "./+types/create-trip";
-import { comboBoxItems, selectItems } from "~/constants";
-import { cn, formatKey } from "~/lib/utils";
 import {
   LayerDirective,
   LayersDirective,
   MapsComponent,
 } from "@syncfusion/ej2-react-maps";
-import React, { useState } from "react";
+
+import { Header } from "../../../components";
+import { comboBoxItems, selectItems } from "~/constants";
 import { world_map } from "~/constants/world_map";
-import { ButtonComponent } from "@syncfusion/ej2-react-buttons";
+import type { Route } from "./+types/create-trip";
 import { account } from "~/appwrite/client";
-import { useNavigate } from "react-router";
+import { cn, formatKey } from "~/lib/utils";
+
+export function meta() {
+  return [
+    { title: "Create Trip" },
+    { name: "description", content: "Create a Personalized Trip" },
+  ];
+}
+
 import fs from "node:fs";
 import path from "node:path";
 
@@ -43,8 +52,8 @@ export const loader = async () => {
 };
 
 const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
-  const countries = loaderData as Country[];
   const navigate = useNavigate();
+  const countries = loaderData as Country[];
 
   const [formData, setFormData] = useState<TripFormData>({
     country: countries[0]?.name || "",
@@ -54,11 +63,15 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
     duration: 0,
     groupType: "",
   });
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleChange = (key: keyof TripFormData, value: string | number) =>
+    setFormData({ ...formData, [key]: value });
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setLoading(true);
 
     if (
@@ -68,16 +81,16 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
       !formData.budget ||
       !formData.groupType
     ) {
-      setError("Please provide values for all fields");
+      setError("Please provide input for all fields");
       setLoading(false);
       return;
     }
-
     if (formData.duration < 1 || formData.duration > 10) {
       setError("Duration must be between 1 and 10 days");
       setLoading(false);
       return;
     }
+
     const user = await account.get();
     if (!user.$id) {
       console.error("User not authenticated");
@@ -103,21 +116,13 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
       const result: CreateTripResponse = await response.json();
 
       if (result?.id) navigate(`/trips/${result.id}`);
-      else console.error("Failed to generate a trip");
-    } catch (e) {
-      console.error("Error generating trip", e);
+      else console.error("Failed to generate itinerary");
+    } catch (error) {
+      console.error("Error generating itinerary:", error);
     } finally {
       setLoading(false);
     }
   };
-
-  const handleChange = (key: keyof TripFormData, value: string | number) => {
-    setFormData({ ...formData, [key]: value });
-  };
-  const countryData = countries.map((country) => ({
-    text: country.name,
-    value: country.value,
-  }));
 
   const mapData = [
     {
@@ -129,11 +134,16 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
     },
   ];
 
+  const countryData = countries.map((country) => ({
+    text: country.name,
+    value: country.value,
+  }));
+
   return (
     <main className="flex flex-col gap-10 pb-20 wrapper">
       <Header
         title="Add a New Trip"
-        description="View and edit AI Generated travel plans"
+        description="View and edit AI-generated travel plans"
       />
 
       <section className="mt-2.5 wrapper-md">
@@ -145,16 +155,15 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
               dataSource={countryData}
               fields={{ text: "text", value: "value" }}
               placeholder="Select a Country"
-              className="combo-box"
               change={(e: { value: string | undefined }) => {
                 if (e.value) {
                   handleChange("country", e.value);
                 }
               }}
-              allowFiltering
+              className="combo-box"
+              allowFiltering={true}
               filtering={(e) => {
                 const query = e.text.toLowerCase();
-
                 e.updateData(
                   countries
                     .filter((country) =>
@@ -174,10 +183,9 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
             <input
               id="duration"
               name="duration"
-              type="number"
-              placeholder="Enter a number of days"
-              className="form-input placeholder:text-gray-100"
               onChange={(e) => handleChange("duration", Number(e.target.value))}
+              placeholder="Enter number of days (e.g., 5, 12)"
+              className="form-input placeholder:text-gray-100"
             />
           </div>
 
@@ -192,23 +200,19 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
                   value: item,
                 }))}
                 fields={{ text: "text", value: "value" }}
-                placeholder={`Select ${formatKey(key)}`}
+                placeholder={`Select ${key}`}
                 change={(e: { value: string | undefined }) => {
                   if (e.value) {
                     handleChange(key, e.value);
                   }
                 }}
-                allowFiltering
+                allowFiltering={true}
                 filtering={(e) => {
                   const query = e.text.toLowerCase();
-
                   e.updateData(
                     comboBoxItems[key]
                       .filter((item) => item.toLowerCase().includes(query))
-                      .map((item) => ({
-                        text: item,
-                        value: item,
-                      }))
+                      .map((item) => ({ text: item, value: item }))
                   );
                 }}
                 className="combo-box"
@@ -217,7 +221,7 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
           ))}
 
           <div>
-            <label htmlFor="location">Location on the world map</label>
+            <label htmlFor="location">Location on map</label>
             <MapsComponent>
               <LayersDirective>
                 <LayerDirective
@@ -238,6 +242,7 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
               <p>{error}</p>
             </div>
           )}
+
           <footer className="px-6 w-full">
             <ButtonComponent
               type="submit"
@@ -248,10 +253,11 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
                 src={`/assets/icons/${
                   loading ? "loader.svg" : "magic-star.svg"
                 }`}
+                alt="magic star"
                 className={cn("size-5", { "animate-spin": loading })}
               />
               <span className="p-16-semibold text-white">
-                {loading ? "Generating..." : "Generate Trip"}
+                {loading ? "Generating..." : "Generate Itinerary"}
               </span>
             </ButtonComponent>
           </footer>
@@ -260,4 +266,5 @@ const CreateTrip = ({ loaderData }: Route.ComponentProps) => {
     </main>
   );
 };
+
 export default CreateTrip;

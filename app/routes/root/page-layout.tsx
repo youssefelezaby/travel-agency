@@ -1,7 +1,7 @@
 import { Outlet, redirect } from "react-router";
 import { getExistingUser, storeUserData } from "~/appwrite/auth";
 import { account } from "~/appwrite/client";
-import { RootNavbar } from "../../../components/";
+import { RootNavbar } from "../../../components";
 
 export async function clientLoader() {
   try {

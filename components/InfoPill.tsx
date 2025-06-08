@@ -1,10 +1,9 @@
-const InfoPill = ({ text, image }: InfoPillProps) => {
-    return (
-        <figure className="info-pill">
-            <img src={image} alt={text} />
+const InfoPill = ({ text, image }: InfoPillProps) => (
+  <figure className="info-pill">
+    <img src={image} alt="info icon" />
 
-            <figcaption>{text}</figcaption>
-        </figure>
-    )
-}
-export default InfoPill
+    <figcaption>{text}</figcaption>
+  </figure>
+);
+
+export default InfoPill;

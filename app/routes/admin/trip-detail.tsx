@@ -1,16 +1,25 @@
-import type { LoaderFunctionArgs } from "react-router";
-import { getAllTrips, getTripById } from "~/appwrite/trips";
-import type { Route } from "./+types/trip-detail";
-import { cn, getFirstWord, parseTripData } from "~/lib/utils";
-import { Header, InfoPill, TripCard } from "../../../components";
+import { type LoaderFunctionArgs } from "react-router";
 import {
+  ButtonComponent,
   ChipDirective,
   ChipListComponent,
   ChipsDirective,
 } from "@syncfusion/ej2-react-buttons";
 
-export const loader = async ({ params }: LoaderFunctionArgs) => {
-  const { tripId } = params;
+import { getAllTrips, getTripById } from "~/appwrite/trips";
+import type { Route } from "./+types/trip-detail";
+import { cn, getFirstWord, parseTripData } from "~/lib/utils";
+import { Header, InfoPill, TripCard } from "../../../components";
+
+export function meta() {
+  return [
+    { title: "Travel Detail" },
+    { name: "description", content: "Trip Details" },
+  ];
+}
+
+export async function loader({ params }: LoaderFunctionArgs) {
+  const tripId = params.tripId;
   if (!tripId) throw new Error("Trip ID is required");
 
   const [trip, trips] = await Promise.all([
@@ -20,18 +29,20 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
 
   return {
     trip,
-    allTrips: trips.allTrips.map(({ $id, tripDetails, imageUrls }) => ({
+    allTrips: trips.allTrips.map(({ $id, tripDetail, imageUrls }) => ({
       id: $id,
-      ...parseTripData(tripDetails),
+      ...parseTripData(tripDetail),
       imageUrls: imageUrls ?? [],
     })),
   };
-};
+}
 
 const TripDetail = ({ loaderData }: Route.ComponentProps) => {
   const imageUrls = loaderData?.trip?.imageUrls || [];
-  const tripData = parseTripData(loaderData?.trip?.tripDetails);
 
+  const tripData = parseTripData(loaderData?.trip?.tripDetail);
+
+  const paymentLink = loaderData?.trip?.payment_link;
   const {
     name,
     duration,
@@ -57,7 +68,7 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
 
   const visitTimeAndWeatherInfo = [
     { title: "Best Time to Visit:", items: bestTimeToVisit },
-    { title: "Weather:", items: weatherInfo },
+    { title: "Weather Info:", items: weatherInfo },
   ];
 
   return (
@@ -70,16 +81,16 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
       <section className="container wrapper-md">
         <header>
           <h1 className="p-40-semibold text-dark-100">{name}</h1>
+
           <div className="flex items-center gap-5">
             <InfoPill
               text={`${duration} day plan`}
               image="/assets/icons/calendar.svg"
             />
-
             <InfoPill
               text={
                 itinerary
-                  ?.slice(0, 4)
+                  ?.slice(0, 2)
                   .map((item) => item.location)
                   .join(", ") || ""
               }
@@ -89,13 +100,14 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
         </header>
 
         <section className="gallery">
-          {imageUrls.map((url: string, i: number) => (
+          {imageUrls.map((url: string, idx: number) => (
             <img
+              key={idx}
               src={url}
-              key={i}
+              alt="trip"
               className={cn(
                 "w-full rounded-xl object-cover",
-                i === 0
+                idx === 0
                   ? "md:col-span-2 md:row-span-2 h-[330px]"
                   : "md:row-span-1 h-[150px]"
               )}
@@ -106,9 +118,9 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
         <section className="flex gap-3 md:gap-5 items-center flex-wrap">
           <ChipListComponent id="travel-chip">
             <ChipsDirective>
-              {pillItems.map((pill, i) => (
+              {pillItems.map((pill, index) => (
                 <ChipDirective
-                  key={i}
+                  key={index}
                   text={getFirstWord(pill.text)}
                   cssClass={`${pill.bg} !text-base !font-medium !px-4`}
                 />
@@ -118,9 +130,9 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
 
           <ul className="flex gap-1 items-center">
             {Array(5)
-              .fill("null")
-              .map((_, index) => (
-                <li key={index}>
+              .fill(null)
+              .map((_, idx) => (
+                <li key={idx}>
                   <img
                     src="/assets/icons/star.svg"
                     alt="star"
@@ -130,11 +142,11 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
               ))}
 
             <li className="ml-1">
-              <ChipListComponent>
+              <ChipListComponent id="travel-chip">
                 <ChipsDirective>
                   <ChipDirective
-                    text="4.9/5"
-                    cssClass="!bg-yellow-50 !text-yellow-700"
+                    text="4.9/5.0"
+                    cssClass="!bg-red-50 !text-red-500"
                   />
                 </ChipsDirective>
               </ChipListComponent>
@@ -167,11 +179,9 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
               </h3>
 
               <ul>
-                {dayPlan.activities.map((activity, index: number) => (
-                  <li key={index}>
-                    <span className="flex-shring-0 p-18-semibold">
-                      {activity.time}
-                    </span>
+                {dayPlan.activities.map((activity: any, idx: number) => (
+                  <li key={idx}>
+                    <span className="flex-shrink-0">{activity.time}</span>
                     <p className="flex-grow">{activity.description}</p>
                   </li>
                 ))}
@@ -180,14 +190,14 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
           ))}
         </ul>
 
-        {visitTimeAndWeatherInfo.map((section) => (
-          <section key={section.title} className="visit">
+        {visitTimeAndWeatherInfo.map((section, idx) => (
+          <section key={idx} className="visit">
             <div>
               <h3>{section.title}</h3>
 
               <ul>
-                {section.items?.map((item) => (
-                  <li key={item}>
+                {section.items?.map((item, idx) => (
+                  <li key={idx}>
                     <p className="flex-grow">{item}</p>
                   </li>
                 ))}
@@ -195,6 +205,13 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
             </div>
           </section>
         ))}
+
+        <a href={paymentLink} className="flex">
+          <ButtonComponent type="submit" className="button-class !h-12 !w-full">
+            <span className="p-16-semibold text-white">Pay and join trip</span>
+            <span className="price-pill">{estimatedPrice}</span>
+          </ButtonComponent>
+        </a>
       </section>
 
       <section className="flex flex-col gap-6">
@@ -217,4 +234,5 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
     </main>
   );
 };
+
 export default TripDetail;

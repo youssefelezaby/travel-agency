@@ -1,8 +1,8 @@
 import {
   type RouteConfig,
-  route,
-  layout,
   index,
+  layout,
+  route,
 } from "@react-router/dev/routes";
 
 export default [
@@ -15,5 +15,8 @@ export default [
   ]),
   route("sign-in", "routes/root/sign-in.tsx"),
   route("api/create-trip", "routes/api/create-trip.ts"),
-  layout("routes/root/page-layout.tsx", [index("routes/root/travel-page.tsx")]),
+  layout("routes/root/page-layout.tsx", [
+    index("routes/root/travel-page.tsx"),
+    route("travel/:tripId", "routes/root/travel-detail.tsx"),
+  ]),
 ] satisfies RouteConfig;
