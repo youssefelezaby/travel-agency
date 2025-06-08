@@ -28,7 +28,7 @@ const RootNavbar = () => {
         "w-full fixed z-50"
       )}
     >
-      <header className="root-nav wrapper ">
+      <header className="root-nav wrappernav ">
         <Link to="/">
           <img
             src="/assets/icons/logo.svg"

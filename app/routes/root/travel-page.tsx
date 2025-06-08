@@ -116,7 +116,7 @@ const TravelPage = ({ loaderData }: Route.ComponentProps) => {
                 Plan Your Trip with Ease
               </h1>
 
-              <p>
+              <p className="font-bold">
                 Customize your travel itinerary in minutes—pick your
                 destination, set your preferences, and explore with confidence.
               </p>
@@ -134,7 +134,7 @@ const TravelPage = ({ loaderData }: Route.ComponentProps) => {
         </div>
       </section>
 
-      <section className="pt-20 wrapper flex flex-col gap-10 h-full">
+      <section className="py-20 px-4 lg:px-8 w-full max-w-7xl mx-auto flex flex-col gap-10">
         <Header
           title="Featured Travel Destinations"
           description="Check out some of the best places you can visit around the world."
@@ -197,7 +197,10 @@ const TravelPage = ({ loaderData }: Route.ComponentProps) => {
         </div>
       </section>
 
-      <section id="trips" className="py-20 wrapper flex flex-col gap-10">
+      <section
+        id="trips"
+        className="pt-2 px-4 lg:px-8 w-full max-w-7xl mx-auto flex flex-col gap-10"
+      >
         <Header
           title="Handpicked Trips"
           description="Browse well-planned trips designed for different travel styles and interests"
@@ -226,7 +229,7 @@ const TravelPage = ({ loaderData }: Route.ComponentProps) => {
       </section>
 
       <footer className="h-28 bg-white">
-        <div className="wrapper footer-container">
+        <div className="wrappernav footer-container">
           <Link to="/">
             <img
               src="/assets/icons/logo.svg"
