@@ -1,4 +1,4 @@
-import { type LoaderFunctionArgs } from "react-router";
+import { type LoaderFunctionArgs, useNavigate } from "react-router";
 import {
   ButtonComponent,
   ChipDirective,
@@ -6,7 +6,7 @@ import {
   ChipsDirective,
 } from "@syncfusion/ej2-react-buttons";
 
-import { getAllTrips, getTripById } from "~/appwrite/trips";
+import { deleteTrip, getAllTrips, getTripById } from "~/appwrite/trips";
 import type { Route } from "./+types/trip-detail";
 import { cn, getFirstWord, parseTripData } from "~/lib/utils";
 import { Header, InfoPill, TripCard } from "../../../components";
@@ -38,11 +38,12 @@ export async function loader({ params }: LoaderFunctionArgs) {
 }
 
 const TripDetail = ({ loaderData }: Route.ComponentProps) => {
+  const navigate = useNavigate();
   const imageUrls = loaderData?.trip?.imageUrls || [];
 
   const tripData = parseTripData(loaderData?.trip?.tripDetail);
+  const tripId = loaderData?.trip?.$id;
 
-  const paymentLink = loaderData?.trip?.payment_link;
   const {
     name,
     duration,
@@ -70,6 +71,23 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
     { title: "Best Time to Visit:", items: bestTimeToVisit },
     { title: "Weather Info:", items: weatherInfo },
   ];
+
+  const handleDelete = async () => {
+    if (!tripId) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this trip?"
+    );
+    if (confirmed) {
+      try {
+        await deleteTrip(tripId);
+        navigate("/trips");
+      } catch (error) {
+        console.error("Failed to delete trip:", error);
+        // Handle error (e.g., show a notification to the user)
+      }
+    }
+  };
 
   return (
     <main className="travel-detail wrapper">
@@ -205,6 +223,13 @@ const TripDetail = ({ loaderData }: Route.ComponentProps) => {
             </div>
           </section>
         ))}
+        <ButtonComponent
+          onClick={handleDelete}
+          className="!h-12 !w-full"
+          cssClass="e-danger"
+        >
+          Delete Trip
+        </ButtonComponent>
       </section>
 
       <section className="flex flex-col gap-6">
