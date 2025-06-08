@@ -24,7 +24,7 @@ const RootNavbar = () => {
       className={cn(
         location.pathname === `/travel/${params.tripId}`
           ? "bg-white"
-          : "glassmorphism",
+          : "bg-white/80",
         "w-full fixed z-50"
       )}
     >
@@ -42,7 +42,7 @@ const RootNavbar = () => {
           {user.status === "admin" && (
             <Link
               to="/dashboard"
-              className={cn("text-base font-normal text-white", {
+              className={cn("text-base font-normal text-black", {
                 "text-dark-100": location.pathname.startsWith("/travel"),
               })}
             >
