@@ -14,6 +14,7 @@ export function meta({}: Route.MetaArgs) {
 export async function clientLoader() {
   try {
     const user = await account.get();
+    console.log("User data:", user);
     if (user.$id) return redirect("/");
   } catch (error) {
     console.error("Error fetching user:", error);

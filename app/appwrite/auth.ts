@@ -99,13 +99,46 @@ const getGooglePicture = async (accessToken: string) => {
 
 export const loginWithGoogle = async () => {
   try {
-    account.createOAuth2Session(
+    // Initial OAuth2 flow - redirect to Google
+    account.createOAuth2Token(
       OAuthProvider.Google,
-      `${window.location.origin}/`,
+      `${window.location.origin}/oauth-callback`,
       `${window.location.origin}/404`
     );
   } catch (error) {
     console.error("Error during OAuth2 session creation:", error);
+  }
+};
+
+export const handleOAuth2Callback = async () => {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('userId');
+    const secret = urlParams.get('secret');
+
+    if (!userId || !secret) {
+      console.error("Missing OAuth2 credentials in URL");
+      return false;
+    }
+
+    // Create session with the OAuth2 credentials
+    await account.createSession(userId, secret);
+    
+    // Check if user exists in our database
+    const existingUser = await getExistingUser(userId);
+    
+    if (!existingUser) {
+      // Store user data if they don't exist in our database
+      await storeUserData();
+    }
+    
+    // Clean up URL parameters
+    window.history.replaceState({}, document.title, window.location.pathname);
+    
+    return true;
+  } catch (error) {
+    console.error("Error handling OAuth2 callback:", error);
+    return false;
   }
 };
 
